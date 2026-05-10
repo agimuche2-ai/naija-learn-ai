@@ -1,4 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
@@ -50,21 +49,21 @@ function getProviders(): ChatProvider[] {
   return [
     {
       name: "Groq",
-      apiKey: process.env.GROQ_API_KEY,
+      apiKey: import.meta.env.VITE_GROQ_API_KEY,
       baseUrl: "https://api.groq.com/openai/v1",
-      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      model: import.meta.env.VITE_GROQ_MODEL || "llama-3.3-70b-versatile",
     },
     {
       name: "OpenAI",
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
       baseUrl: "https://api.openai.com/v1",
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      model: import.meta.env.VITE_OPENAI_MODEL || "gpt-4o-mini",
     },
     {
       name: "Lovable",
-      apiKey: process.env.LOVABLE_API_KEY,
+      apiKey: import.meta.env.VITE_LOVABLE_API_KEY,
       baseUrl: "https://ai.gateway.lovable.dev/v1",
-      model: process.env.LOVABLE_MODEL || "gpt-4o-mini",
+      model: import.meta.env.VITE_LOVABLE_MODEL || "gpt-4o-mini",
     },
   ];
 }
@@ -139,9 +138,8 @@ function findBestMaterial(materials: StudyMaterial[], userMessage: string) {
 }
 
 async function getLocalDatabaseFallback(userMessage: string): Promise<string | null> {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const supabaseKey =
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "";
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
   if (!supabaseUrl || !supabaseKey) return null;
 
@@ -187,24 +185,7 @@ async function getLocalDatabaseFallback(userMessage: string): Promise<string | n
   }
 }
 
-function validateTutorRequest(input: TutorRequest): TutorRequest {
-  if (!input || !Array.isArray(input.messages)) {
-    throw new Error("Tutor request must include messages.");
-  }
-
-  return {
-    messages: input.messages
-      .filter((message) => message && typeof message.content === "string")
-      .map((message) => ({
-        role: message.role === "assistant" || message.role === "system" ? message.role : "user",
-        content: message.content,
-      })),
-  };
-}
-
-export const askTutor = createServerFn({ method: "POST" })
-  .inputValidator(validateTutorRequest)
-  .handler(async ({ data }) => {
+export const askTutor = async ({ data }: { data: TutorRequest }) => {
     try {
       const userMessage = data.messages[data.messages.length - 1]?.content || "";
 
@@ -216,9 +197,9 @@ export const askTutor = createServerFn({ method: "POST" })
       const localFallback = await getLocalDatabaseFallback(userMessage);
       if (localFallback) return localFallback;
 
-      return "I could not reach the AI tutor provider right now. Check that GROQ_API_KEY, OPENAI_API_KEY, or LOVABLE_API_KEY is configured on the server, then try again.";
+      return "I could not reach the AI tutor provider right now. Check that your AI API keys are configured, then try again.";
     } catch (error) {
       console.error("Tutor error:", error);
-      return "I encountered an error while processing your question. Please try again or refresh the page. If this continues, check that the server is running.";
+      return "I encountered an error while processing your question. Please try again or refresh the page.";
     }
-  });
+  };
