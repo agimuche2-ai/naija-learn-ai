@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { AppNav } from "@/components/AppNav";
+import { Sidebar } from "@/components/Sidebar";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
@@ -26,9 +26,11 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNav />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <Outlet />
+      <Sidebar />
+      <main className="md:ml-64 transition-all duration-300">
+        <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

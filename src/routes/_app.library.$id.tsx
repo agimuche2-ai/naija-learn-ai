@@ -19,6 +19,8 @@ type Material = {
   content: string;
 };
 
+const terms = ["First Term", "Second Term", "Third Term"];
+
 function MaterialDetailPage() {
   const { id } = Route.useParams();
   const [material, setMaterial] = useState<Material | null>(null);
@@ -31,7 +33,10 @@ function MaterialDetailPage() {
         .select("*")
         .eq("id", id)
         .single();
-      setMaterial(data as Material);
+      const loadedMaterial = data as Material | null;
+      setMaterial(
+        loadedMaterial && terms.includes(loadedMaterial.category) ? loadedMaterial : null,
+      );
       setLoading(false);
     })();
   }, [id]);

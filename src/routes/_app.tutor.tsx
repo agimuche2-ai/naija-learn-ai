@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Send, Sparkles, User, RefreshCcw } from "lucide-react";
+import { Loader2, RefreshCcw, Send, Sparkles, User } from "lucide-react";
 import { askTutor } from "@/functions/tutor";
 
 export const Route = createFileRoute("/_app/tutor")({
@@ -14,7 +15,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const SUGGESTIONS = [
   "Explain why HF has a higher boiling point than HCl.",
-  "Walk me through balancing C3H8 + O2 → CO2 + H2O.",
+  "Walk me through balancing C3H8 + O2 -> CO2 + H2O.",
   "What is the difference between sigma and pi bonds?",
   "How do I calculate the pH of 0.01 M HCl?",
 ];
@@ -28,21 +29,19 @@ function TutorPage() {
   const ask = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
+
     const userMsg: Msg = { role: "user", content: trimmed };
     const next = [...messages, userMsg];
+
     setMessages(next);
     setInput("");
     setStreaming(true);
 
     try {
       const answer = await askTutor({ data: { messages: next } });
-      
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: answer as string }
-      ]);
-    } catch (e) {
-      console.error(e);
+      setMessages((prev) => [...prev, { role: "assistant", content: answer as string }]);
+    } catch (error) {
+      console.error(error);
       toast.error("Tutor is currently busy. Please try again.");
     } finally {
       setStreaming(false);
@@ -66,10 +65,10 @@ function TutorPage() {
             Ask anything from the SSS Chemistry syllabus.
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={reset} 
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={reset}
           className="ml-auto rounded-xl"
           disabled={messages.length === 0}
         >
@@ -85,46 +84,47 @@ function TutorPage() {
                 <div className="max-w-md text-center">
                   <p className="text-sm text-muted-foreground">Try a starter question:</p>
                   <div className="mt-4 grid gap-2">
-                    {SUGGESTIONS.map((s) => (
+                    {SUGGESTIONS.map((suggestion) => (
                       <button
-                        key={s}
-                        onClick={() => ask(s)}
+                        key={suggestion}
+                        onClick={() => ask(suggestion)}
                         className="rounded-xl border border-border bg-card px-4 py-2 text-left text-sm transition hover:border-primary hover:bg-primary/5"
                       >
-                        {s}
+                        {suggestion}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              messages.map((m, i) => <Bubble key={i} msg={m} />)
+              messages.map((message, index) => <Bubble key={index} msg={message} />)
             )}
+
             {streaming && messages[messages.length - 1]?.role === "user" && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
+                <Loader2 className="h-4 w-4 animate-spin" /> Thinking...
               </div>
             )}
           </div>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={(event) => {
+              event.preventDefault();
               ask(input);
             }}
             className="flex items-end gap-2 border-t border-border bg-secondary/30 p-3"
           >
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
                   ask(input);
                 }
               }}
               rows={1}
-              placeholder="Ask a Chemistry question…"
+              placeholder="Ask a Chemistry question..."
               className="max-h-32 flex-1 resize-none rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
             />
             <Button
@@ -143,76 +143,105 @@ function TutorPage() {
 
 function Bubble({ msg }: { msg: Msg }) {
   const mine = msg.role === "user";
-  
-  // Basic markdown-to-React renderer
+
   const renderContent = (text: string) => {
-    return text.split('\n').map((line, i) => {
-      // Handle [IMAGE: ...] placeholders
-      if (line.includes('[IMAGE:')) {
+    return text.split("\n").map((line, index) => {
+      if (line.includes("[IMAGE:")) {
         const desc = line.match(/\[IMAGE: (.*?)\]/)?.[1] || "Diagram";
         return (
-          <div key={i} className="my-4 overflow-hidden rounded-xl border border-border bg-card/50">
+          <div key={index} className="my-4 overflow-hidden rounded-xl border border-border bg-card/50">
             <div className="flex h-32 items-center justify-center bg-secondary/30">
               <div className="text-center">
                 <Sparkles className="mx-auto mb-2 h-6 w-6 text-primary/40" />
-                <p className="text-xs text-muted-foreground px-4 italic">{desc}</p>
+                <p className="px-4 text-xs italic text-muted-foreground">{desc}</p>
               </div>
             </div>
           </div>
         );
       }
 
-      // Handle Bold & Italics
-      let parts: (string | JSX.Element)[] = [line];
+      let parts: ReactNode[] = [line];
       const boldRegex = /\*\*(.*?)\*\*/g;
       const italicRegex = /\*(.*?)\*/g;
-      
-      const processBold = (text: string): (string | JSX.Element)[] => {
-        const result: (string | JSX.Element)[] = [];
-        let lastIdx = 0;
+
+      const processBold = (value: string): ReactNode[] => {
+        const result: ReactNode[] = [];
+        let lastIndex = 0;
         let match;
-        while ((match = boldRegex.exec(text)) !== null) {
-          result.push(text.slice(lastIdx, match.index));
-          result.push(<strong key={`b-${match.index}`} className="font-bold text-foreground">{match[1]}</strong>);
-          lastIdx = boldRegex.lastIndex;
+
+        while ((match = boldRegex.exec(value)) !== null) {
+          result.push(value.slice(lastIndex, match.index));
+          result.push(
+            <strong key={`b-${match.index}`} className="font-bold text-foreground">
+              {match[1]}
+            </strong>,
+          );
+          lastIndex = boldRegex.lastIndex;
         }
-        result.push(text.slice(lastIdx));
+
+        result.push(value.slice(lastIndex));
         return result;
       };
 
-      const processItalic = (elements: (string | JSX.Element)[]): (string | JSX.Element)[] => {
-        const result: (string | JSX.Element)[] = [];
-        elements.forEach((el, idx) => {
-          if (typeof el === 'string') {
-            let lastIdx = 0;
-            let match;
-            while ((match = italicRegex.exec(el)) !== null) {
-              result.push(el.slice(lastIdx, match.index));
-              result.push(<em key={`i-${idx}-${match.index}`} className="italic opacity-90">{match[1]}</em>);
-              lastIdx = italicRegex.lastIndex;
-            }
-            result.push(el.slice(lastIdx));
-          } else {
-            result.push(el);
+      const processItalic = (elements: ReactNode[]): ReactNode[] => {
+        const result: ReactNode[] = [];
+
+        elements.forEach((element, elementIndex) => {
+          if (typeof element !== "string") {
+            result.push(element);
+            return;
           }
+
+          let lastIndex = 0;
+          let match;
+          while ((match = italicRegex.exec(element)) !== null) {
+            result.push(element.slice(lastIndex, match.index));
+            result.push(
+              <em key={`i-${elementIndex}-${match.index}`} className="italic opacity-90">
+                {match[1]}
+              </em>,
+            );
+            lastIndex = italicRegex.lastIndex;
+          }
+          result.push(element.slice(lastIndex));
         });
+
         return result;
       };
 
       parts = processItalic(processBold(line));
 
-      // Handle bullet points
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-        return <li key={i} className="ml-4 list-disc mb-1">{parts}</li>;
+      if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
+        return (
+          <li key={index} className="mb-1 ml-4 list-disc">
+            {parts}
+          </li>
+        );
       }
-      
-      // Handle headers
-      if (line.startsWith('### ')) return <h3 key={i} className="mt-4 mb-2 text-lg font-bold">{line.slice(4)}</h3>;
-      if (line.startsWith('## ')) return <h2 key={i} className="mt-5 mb-2 text-xl font-bold">{line.slice(3)}</h2>;
 
-      if (!line.trim()) return <div key={i} className="h-2" />;
-      
-      return <p key={i} className="mb-2 leading-relaxed">{parts}</p>;
+      if (line.startsWith("### ")) {
+        return (
+          <h3 key={index} className="mb-2 mt-4 text-lg font-bold">
+            {line.slice(4)}
+          </h3>
+        );
+      }
+
+      if (line.startsWith("## ")) {
+        return (
+          <h2 key={index} className="mb-2 mt-5 text-xl font-bold">
+            {line.slice(3)}
+          </h2>
+        );
+      }
+
+      if (!line.trim()) return <div key={index} className="h-2" />;
+
+      return (
+        <p key={index} className="mb-2 leading-relaxed">
+          {parts}
+        </p>
+      );
     });
   };
 

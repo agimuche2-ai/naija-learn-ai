@@ -22,6 +22,16 @@ const ss2ss3Topics = [
   { title: "Industrial Chemistry", level: "SS3", marker: "18.1  Haber Process" }
 ];
 
+function termForTopic(topic) {
+  if (["Oxidation & Reduction (Redox)", "Electrolysis", "Organic Chemistry"].includes(topic.title)) {
+    return "First Term";
+  }
+  if (["Solubility", "Environmental Pollution", "Acids, Bases & Salts", "Industrial Chemistry"].includes(topic.title)) {
+    return "Third Term";
+  }
+  return "Second Term";
+}
+
 function superClean(text) {
   // Remove all asterisks
   let cleaned = text.replace(/\*/g, '');
@@ -50,7 +60,7 @@ async function populate() {
       title: topic.title,
       topic: "Chemistry",
       class_level: topic.level,
-      category: "Clean Syllabus",
+      category: termForTopic(topic),
       content: cleanNotes
     });
     console.log(`✓ ${topic.title} (Clean)`);

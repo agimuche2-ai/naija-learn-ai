@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowRight, BookOpen, Brain, Flame, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, Flame, Sparkles, TrendingUp, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -89,22 +89,22 @@ function Dashboard() {
   const greeting = (user?.user_metadata?.full_name as string)?.split(" ")[0] || "Student";
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <p className="text-sm text-muted-foreground">Welcome back,</p>
-          <h1 className="font-display text-3xl font-bold md:text-4xl">{greeting} 👋</h1>
-          <p className="mt-1 text-muted-foreground">Here's your Chemistry progress overview.</p>
+          <h1 className="font-display text-3xl font-bold md:text-4xl">Welcome back, {greeting}! 👋</h1>
+          <p className="mt-2 text-muted-foreground">Here's your Chemistry progress overview.</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" className="rounded-lg">
             <Link to="/library">
-              <BookOpen className="mr-1 h-4 w-4" /> Library
+              <BookOpen className="mr-2 h-4 w-4" /> Library
             </Link>
           </Button>
-          <Button asChild size="sm" className="bg-gradient-hero text-primary-foreground shadow-glow hover:opacity-95">
+          <Button asChild className="bg-gradient-hero text-primary-foreground shadow-glow hover:opacity-95 rounded-lg">
             <Link to="/quiz">
-              <Sparkles className="mr-1 h-4 w-4" /> Start a quiz
+              <Sparkles className="mr-2 h-4 w-4" /> Start Quiz
             </Link>
           </Button>
         </div>
@@ -112,26 +112,28 @@ function Dashboard() {
 
       {/* Progress Overview */}
       {attempts.length > 0 && (
-        <Card className="border-none bg-gradient-to-r from-primary/10 via-accent/5 to-transparent shadow-soft">
-          <CardContent className="flex flex-wrap items-center justify-between gap-6 py-6">
-            <div className="flex items-center gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/20 text-primary">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary/70">Overall Level</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black">SSS {attempts.length > 20 ? '3' : attempts.length > 10 ? '2' : '1'}</span>
-                  <span className="text-sm text-muted-foreground">Mastery Path</span>
+        <Card className="border-none bg-gradient-to-br from-primary/15 via-primary/5 to-transparent shadow-md">
+          <CardContent className="py-6 px-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/20 text-primary">
+                  <TrendingUp className="h-7 w-7" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-primary/70">Overall Level</p>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className="font-display text-3xl font-black">SSS {attempts.length > 20 ? '3' : attempts.length > 10 ? '2' : '1'}</span>
+                    <span className="text-sm text-muted-foreground">Mastery Path</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex-1 max-w-md">
-              <div className="flex justify-between text-xs mb-2">
-                <span>Progress to next level</span>
-                <span>{Math.min(100, (attempts.length % 10) * 10)}%</span>
+              <div className="flex-1 md:max-w-xs">
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="font-medium">Progress to next level</span>
+                  <span className="font-bold text-primary">{Math.min(100, (attempts.length % 10) * 10)}%</span>
+                </div>
+                <Progress value={(attempts.length % 10) * 10} className="h-2.5" />
               </div>
-              <Progress value={(attempts.length % 10) * 10} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -145,30 +147,38 @@ function Dashboard() {
         <StatCard icon={Sparkles} label="Correct answers" value={stats.correct} />
       </div>
 
+      {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Link to="/library">
-          <Card className="h-full border-primary/20 bg-primary/5 transition hover:bg-primary/10">
-            <CardContent className="flex items-center gap-4 py-6">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground">
-                <BookOpen className="h-6 w-6" />
+        <Link to="/library" className="group">
+          <Card className="h-full border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 transition-all hover:shadow-md hover:border-primary/40">
+            <CardContent className="flex items-center justify-between gap-4 py-8 px-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground flex-shrink-0">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Study Library</h3>
+                  <p className="text-sm text-muted-foreground">Access SS1, SS2, SS3 notes</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold">Browse Study Library</h3>
-                <p className="text-sm text-muted-foreground">Access notes for SS1, SS2, and SS3</p>
-              </div>
+              <ArrowRight className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </CardContent>
           </Card>
         </Link>
-        <Link to="/tutor">
-          <Card className="h-full border-accent/20 bg-accent/5 transition hover:bg-accent/10">
-            <CardContent className="flex items-center gap-4 py-6">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground">
-                <Sparkles className="h-6 w-6" />
+
+        <Link to="/tutor" className="group">
+          <Card className="h-full border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5 transition-all hover:shadow-md hover:border-accent/40">
+            <CardContent className="flex items-center justify-between gap-4 py-8 px-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground flex-shrink-0">
+                  <MessageCircle className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Ask AI Tutor</h3>
+                  <p className="text-sm text-muted-foreground">Get instant help</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold">Ask AI Tutor</h3>
-                <p className="text-sm text-muted-foreground">Get instant help with any topic</p>
-              </div>
+              <ArrowRight className="h-5 w-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </CardContent>
           </Card>
         </Link>
@@ -178,39 +188,43 @@ function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Accuracy by topic</CardTitle>
+            <CardTitle className="text-lg">Accuracy by Topic</CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byTopic}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="topic" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                  }}
-                  labelFormatter={(_, p) => p[0]?.payload.full ?? ""}
-                />
-                <Bar dataKey="accuracy" fill="var(--primary)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent className="h-80">
+            {byTopic.every((t) => t.attempts === 0) ? (
+              <EmptyHint />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byTopic}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis dataKey="topic" stroke="var(--muted-foreground)" fontSize={11} />
+                  <YAxis stroke="var(--muted-foreground)" fontSize={11} domain={[0, 100]} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                    }}
+                    labelFormatter={(_, p) => p[0]?.payload.full ?? ""}
+                  />
+                  <Bar dataKey="accuracy" fill="var(--primary)" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent trend</CardTitle>
+            <CardTitle className="text-lg">Recent Trend</CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-80">
             {trend.length === 0 ? (
               <EmptyHint />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} />
                   <YAxis stroke="var(--muted-foreground)" fontSize={11} domain={[0, 100]} />
                   <Tooltip
@@ -224,7 +238,7 @@ function Dashboard() {
                     type="monotone"
                     dataKey="accuracy"
                     stroke="var(--primary)"
-                    strokeWidth={3}
+                    strokeWidth={2.5}
                     dot={{ fill: "var(--primary)", r: 4 }}
                   />
                 </LineChart>
@@ -238,29 +252,29 @@ function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Recommended for you</CardTitle>
+            <CardTitle className="text-lg">📌 Recommended for You</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {weakTopics.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground py-4">
                 Take a few quizzes — we'll spotlight your weak topics here.
               </p>
             ) : (
               weakTopics.map((t) => (
                 <div
                   key={t.full}
-                  className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 p-4"
+                  className="flex items-center justify-between rounded-lg border border-border/60 bg-secondary/30 p-4 hover:bg-secondary/50 transition-colors"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold">{t.full}</p>
-                      <span className="text-sm font-medium text-destructive">{t.accuracy}%</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-foreground">{t.full}</p>
+                      <span className="text-sm font-bold text-destructive">{t.accuracy}%</span>
                     </div>
-                    <Progress value={t.accuracy} className="mt-2 h-2" />
+                    <Progress value={t.accuracy} className="h-2" />
                   </div>
-                  <Button asChild size="sm" variant="ghost" className="ml-3">
+                  <Button asChild size="sm" variant="ghost" className="ml-3 flex-shrink-0">
                     <Link to="/quiz/$topic" params={{ topic: t.full }}>
-                      Practice <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
@@ -271,26 +285,26 @@ function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent attempts</CardTitle>
+            <CardTitle className="text-lg">📊 Recent Attempts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground py-4">Loading…</p>
             ) : attempts.length === 0 ? (
               <EmptyHint />
             ) : (
               attempts.slice(0, 5).map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
+                  className="flex items-center justify-between rounded-lg border border-border/60 px-4 py-3 hover:bg-secondary/30 transition-colors"
                 >
-                  <div>
-                    <p className="font-medium">{a.topic}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{a.topic}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleString()}
+                      {new Date(a.created_at).toLocaleDateString()} {new Date(a.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0 ml-4">
                     <p className="font-semibold">
                       {a.score}/{a.total}
                     </p>
@@ -320,19 +334,19 @@ function StatCard({
   accent?: boolean;
 }) {
   return (
-    <Card className={accent ? "border-primary/30 bg-gradient-card" : ""}>
-      <CardContent className="flex items-center gap-4 pt-6">
-        <div
-          className={`grid h-11 w-11 place-items-center rounded-xl ${
-            accent ? "bg-gradient-hero text-primary-foreground" : "bg-secondary text-foreground"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
+    <Card className={accent ? "border-primary/30 bg-gradient-to-br from-primary/15 to-primary/5" : "bg-card/50"}>
+      <CardContent className="flex flex-col gap-2 py-6">
+        <div className="flex items-center gap-3">
+          <div
+            className={`grid h-10 w-10 place-items-center rounded-lg flex-shrink-0 ${
+              accent ? "bg-gradient-hero text-primary-foreground" : "bg-secondary text-foreground"
+            }`}
+          >
+            <Icon className="h-5 w-5" />
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">{label}</p>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-          <p className="font-display text-2xl font-bold">{value}</p>
-        </div>
+        <p className="font-display text-3xl font-bold">{value}</p>
       </CardContent>
     </Card>
   );

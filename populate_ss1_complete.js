@@ -137,6 +137,31 @@ A complex mixture of hydrocarbons separated by fractional distillation into usef
   }
 ];
 
+function termForTitle(title) {
+  if (
+    [
+      "Structure of the Atom: Orbitals",
+    ].includes(title)
+  ) {
+    return "First Term";
+  }
+
+  if (
+    [
+      "Introduction to the Mole Concept",
+      "Chemical Equations and Stoichiometry",
+      "Empirical and Molecular Formulae",
+      "Laws of Chemical Combination",
+      "Chemical Combinations and Bonding",
+      "Kinetic Theory and Gas Laws",
+    ].includes(title)
+  ) {
+    return "Second Term";
+  }
+
+  return "Third Term";
+}
+
 async function populate() {
   console.log("Populating All Remaining SS1 Topics from ClassNotes.ng...");
   
@@ -145,7 +170,7 @@ async function populate() {
       title: note.title,
       topic: "Chemistry",
       class_level: "SS1",
-      category: "Full Curriculum",
+      category: termForTitle(note.title),
       content: note.content
     });
     

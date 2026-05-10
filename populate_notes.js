@@ -30,6 +30,31 @@ const topics = [
   { id: 18, title: "Industrial Chemistry", level: "SS3", marker: "18.1  Haber Process" }
 ];
 
+function termForTopic(topic) {
+  const termsById = {
+    1: "First Term",
+    2: "Second Term",
+    3: "Second Term",
+    4: "First Term",
+    5: "Third Term",
+    6: "Third Term",
+    7: "Third Term",
+    8: "Third Term",
+    9: "Third Term",
+    10: "First Term",
+    11: "First Term",
+    12: "Second Term",
+    13: "Second Term",
+    14: "Second Term",
+    15: "Second Term",
+    16: "Second Term",
+    17: "First Term",
+    18: "Third Term",
+  };
+
+  return termsById[topic.id];
+}
+
 function cleanContent(text) {
   // Remove page numbers (e.g., "Topic Name   413")
   let cleaned = text.replace(/\t\d+$/gm, '');
@@ -80,7 +105,7 @@ async function populateNotes() {
       title: topic.title,
       topic: "Chemistry",
       class_level: topic.level,
-      category: "Chemistry Notes",
+      category: termForTopic(topic),
       content: cleaned
     });
 

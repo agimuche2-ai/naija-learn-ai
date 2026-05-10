@@ -57,7 +57,7 @@ async function populate() {
       title: note.title,
       topic: "Chemistry",
       class_level: "SS1",
-      category: "Full Curriculum",
+      category: "Third Term",
       content: note.content
     });
     console.log("✓ Inserted: " + note.title);

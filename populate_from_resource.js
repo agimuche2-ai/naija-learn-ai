@@ -40,6 +40,7 @@ async function parseAndPopulate() {
       title: topic1Title,
       topic: "General Chemistry",
       class_level: topic1Level,
+      category: "First Term",
       content: topic1Content.trim()
     });
     if (error) console.error("Error inserting material:", error);

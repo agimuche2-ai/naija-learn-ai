@@ -155,6 +155,36 @@ export type Database = {
         }
         Relationships: []
       }
+      study_materials: {
+        Row: {
+          category: "First Term" | "Second Term" | "Third Term"
+          class_level: "SS1" | "SS2" | "SS3"
+          content: string
+          created_at: string
+          id: string
+          title: string
+          topic: string
+        }
+        Insert: {
+          category: "First Term" | "Second Term" | "Third Term"
+          class_level: "SS1" | "SS2" | "SS3"
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          topic: string
+        }
+        Update: {
+          category?: "First Term" | "Second Term" | "Third Term"
+          class_level?: "SS1" | "SS2" | "SS3"
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          topic?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

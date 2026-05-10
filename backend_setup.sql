@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.study_materials (
     title TEXT NOT NULL,
     topic TEXT NOT NULL,
     class_level TEXT NOT NULL,
-    category TEXT NOT NULL,
+    category TEXT NOT NULL CONSTRAINT study_materials_category_term_check CHECK (category IN ('First Term', 'Second Term', 'Third Term')),
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

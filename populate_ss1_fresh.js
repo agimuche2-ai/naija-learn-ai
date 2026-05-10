@@ -153,6 +153,26 @@ The average mass of the atoms of an element compared to 1/12th the mass of Carbo
   }
 ];
 
+function termForTitle(title) {
+  if (
+    [
+      "Introduction to Chemistry",
+      "Laboratory Familiarization",
+      "Nature of Matter",
+      "Elements, Symbols and Valency",
+      "Compounds and Mixtures",
+      "Standard Separation Techniques",
+      "Particulate Nature of Matter",
+      "IUPAC Nomenclature",
+      "Atomic Structure & Calculations",
+    ].includes(title)
+  ) {
+    return "First Term";
+  }
+
+  return "Second Term";
+}
+
 async function populate() {
   console.log("Populating SS1 Fresh Notes from ClassNotes.ng...");
   
@@ -161,7 +181,7 @@ async function populate() {
       title: note.title,
       topic: "Chemistry",
       class_level: "SS1",
-      category: "Syllabus Notes",
+      category: termForTitle(note.title),
       content: note.content
     });
     
