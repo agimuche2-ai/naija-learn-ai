@@ -3,7 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 console.log('Step 1: Running production build...');
-execSync('npm run build', { stdio: 'inherit' });
+execSync('npm run build:original', { stdio: 'inherit' });
 
 const distPath = path.join(process.cwd(), 'dist');
 const clientPath = path.join(distPath, 'client');
