@@ -10,11 +10,16 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown,
+  BookOpen,
+  Target,
+  Map,
 } from "lucide-react";
+import { XPProgressBar } from "@/components/XPProgressBar";
+import { useLearningProfile } from "@/hooks/use-learning-profile";
 
 export function Sidebar() {
   const { user, signOut } = useAuth();
+  const { profile } = useLearningProfile();
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [isOpen, setIsOpen] = useState(false);
@@ -42,8 +47,10 @@ export function Sidebar() {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: Sparkles, label: "Quiz", href: "/quiz" },
+    { icon: Map, label: "Learn", href: "/learn" },
     { icon: GraduationCap, label: "Library", href: "/library" },
     { icon: MessageCircle, label: "AI Tutor", href: "/tutor" },
+    { icon: Target, label: "Coach Amaka", href: "/coach" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -101,6 +108,13 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* XP Bar */}
+        {profile && (
+          <div className="px-4 pb-3">
+            <XPProgressBar profile={profile} compact />
+          </div>
+        )}
 
         {/* User Section */}
         <div className="border-t border-border/60 p-4 space-y-3">

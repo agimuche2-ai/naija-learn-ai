@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, RefreshCcw, Send, Sparkles, User } from "lucide-react";
 import { askTutor } from "@/functions/tutor";
+import { useLearningProfile } from "@/hooks/use-learning-profile";
+import { useMastery } from "@/hooks/use-mastery";
+import { useVoice } from "@/hooks/use-voice";
+import { VoiceButton } from "@/components/VoiceButton";
+import { getLevelFromXP, LEARNING_STYLE_EMOJI, LEARNING_STYLE_LABELS } from "@/lib/adaptive-engine";
 
 export const Route = createFileRoute("/_app/tutor")({
   component: TutorPage,
@@ -13,7 +18,7 @@ export const Route = createFileRoute("/_app/tutor")({
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
+const FALLBACK_SUGGESTIONS = [
   "Explain why HF has a higher boiling point than HCl.",
   "Walk me through balancing C3H8 + O2 -> CO2 + H2O.",
   "What is the difference between sigma and pi bonds?",
@@ -21,14 +26,47 @@ const SUGGESTIONS = [
 ];
 
 function TutorPage() {
+  const { profile } = useLearningProfile();
+  const { weakTopics } = useMastery();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ── Voice ───────────────────────────────────────────────────────────────────
+  const { state: voiceState, isSupported: voiceSupported, startListening, stopListening, speak, stopSpeaking, transcript } = useVoice({
+    onTranscript: useCallback((text: string) => {
+      setInput(text);
+    }, []),
+    onError: useCallback((msg: string) => toast.error(msg), []),
+  });
+
+  const isListening = voiceState === "listening";
+  const isSpeaking = voiceState === "speaking";
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, streaming]);
+
+  // Auto-populate input from transcript
+  useEffect(() => {
+    if (transcript) setInput(transcript);
+  }, [transcript]);
+
+  // Dynamic suggestions
+  const suggestions = useMemo(() => {
+    const weak = weakTopics.slice(0, 2).map(t => `Help me understand ${t.topic} — I scored ${t.mastery_score}% last time.`);
+    return [...weak, ...FALLBACK_SUGGESTIONS].slice(0, 4);
+  }, [weakTopics]);
 
   const ask = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
+
+    // Stop any ongoing TTS before sending
+    if (isSpeaking) stopSpeaking();
 
     const userMsg: Msg = { role: "user", content: trimmed };
     const next = [...messages, userMsg];
@@ -38,8 +76,21 @@ function TutorPage() {
     setStreaming(true);
 
     try {
-      const answer = await askTutor({ data: { messages: next } });
-      setMessages((prev) => [...prev, { role: "assistant", content: answer as string }]);
+      const answer = await askTutor({
+        data: {
+          messages: next,
+          studentContext: {
+            learningStyle: profile?.learning_style ?? null,
+            weakTopics: weakTopics.slice(0, 4).map(t => t.topic),
+            level: getLevelFromXP(profile?.xp ?? 0).name,
+            xp: profile?.xp ?? 0,
+          },
+        },
+      });
+      const replyText = answer as string;
+      setMessages(prev => [...prev, { role: "assistant", content: replyText }]);
+      // Auto-speak the response if enabled
+      if (autoSpeak) speak(replyText);
     } catch (error) {
       console.error(error);
       toast.error("Tutor is currently busy. Please try again.");
@@ -55,8 +106,8 @@ function TutorPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-hero shadow-glow">
+      <div className="mb-6 flex items-center gap-3 flex-wrap">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-hero shadow-glow flex-shrink-0">
           <Sparkles className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
@@ -65,16 +116,47 @@ function TutorPage() {
             Ask anything from the SSS Chemistry syllabus.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={reset}
-          className="ml-auto rounded-xl"
-          disabled={messages.length === 0}
-        >
-          <RefreshCcw className="mr-2 h-4 w-4" /> Reset Chat
-        </Button>
+        {profile?.learning_style && (
+          <span className="ml-2 hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-semibold">
+            {LEARNING_STYLE_EMOJI[profile.learning_style]}{" "}
+            {LEARNING_STYLE_LABELS[profile.learning_style]}
+          </span>
+        )}
+        {/* Voice controls in header */}
+        <div className="ml-auto flex items-center gap-2">
+          {voiceSupported && (
+            <VoiceButton
+              state={voiceState}
+              isSupported={voiceSupported}
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              onMicClick={isListening ? stopListening : startListening}
+              onStopSpeaking={stopSpeaking}
+              autoSpeak={autoSpeak}
+              onToggleAutoSpeak={() => setAutoSpeak(v => !v)}
+              compact
+            />
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={reset}
+            className="rounded-xl"
+            disabled={messages.length === 0}
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" /> Reset
+          </Button>
+        </div>
       </div>
+
+      {/* Listening banner */}
+      {isListening && (
+        <div className="mb-3 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
+          <span className="font-medium text-destructive">Listening… speak your question</span>
+          {transcript && <span className="ml-2 text-muted-foreground italic truncate">"{transcript}"</span>}
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         <CardContent className="p-0">
@@ -82,9 +164,15 @@ function TutorPage() {
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center py-10">
                 <div className="max-w-md text-center">
+                  {profile?.learning_style && (
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
+                      {LEARNING_STYLE_EMOJI[profile.learning_style]}{" "}
+                      Tailored for {LEARNING_STYLE_LABELS[profile.learning_style]} learners
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground">Try a starter question:</p>
                   <div className="mt-4 grid gap-2">
-                    {SUGGESTIONS.map((suggestion) => (
+                    {suggestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => ask(suggestion)}
@@ -114,6 +202,18 @@ function TutorPage() {
             }}
             className="flex items-end gap-2 border-t border-border bg-secondary/30 p-3"
           >
+            {/* Voice mic in input bar */}
+            {voiceSupported && (
+              <VoiceButton
+                state={voiceState}
+                isSupported={voiceSupported}
+                isSpeaking={isSpeaking}
+                isListening={isListening}
+                onMicClick={isListening ? stopListening : startListening}
+                onStopSpeaking={stopSpeaking}
+                compact
+              />
+            )}
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -124,7 +224,7 @@ function TutorPage() {
                 }
               }}
               rows={1}
-              placeholder="Ask a Chemistry question..."
+              placeholder={isListening ? "Listening — speak now…" : "Ask a Chemistry question or tap the mic 🎙️"}
               className="max-h-32 flex-1 resize-none rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
             />
             <Button

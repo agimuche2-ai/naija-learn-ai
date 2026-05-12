@@ -13,7 +13,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTutorRouteImport } from './routes/_app.tutor'
+import { Route as AppLearnRouteImport } from './routes/_app.learn'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppCoachRouteImport } from './routes/_app.coach'
 import { Route as AppQuizIndexRouteImport } from './routes/_app.quiz.index'
 import { Route as AppLibraryIndexRouteImport } from './routes/_app.library.index'
 import { Route as AppQuizTopicRouteImport } from './routes/_app.quiz.$topic'
@@ -38,9 +40,19 @@ const AppTutorRoute = AppTutorRouteImport.update({
   path: '/tutor',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLearnRoute = AppLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCoachRoute = AppCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
   getParentRoute: () => AppRoute,
 } as any)
 const AppQuizIndexRoute = AppQuizIndexRouteImport.update({
@@ -67,7 +79,9 @@ const AppLibraryIdRoute = AppLibraryIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coach': typeof AppCoachRoute
   '/dashboard': typeof AppDashboardRoute
+  '/learn': typeof AppLearnRoute
   '/tutor': typeof AppTutorRoute
   '/library/$id': typeof AppLibraryIdRoute
   '/quiz/$topic': typeof AppQuizTopicRoute
@@ -77,7 +91,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coach': typeof AppCoachRoute
   '/dashboard': typeof AppDashboardRoute
+  '/learn': typeof AppLearnRoute
   '/tutor': typeof AppTutorRoute
   '/library/$id': typeof AppLibraryIdRoute
   '/quiz/$topic': typeof AppQuizTopicRoute
@@ -89,7 +105,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_app/coach': typeof AppCoachRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/learn': typeof AppLearnRoute
   '/_app/tutor': typeof AppTutorRoute
   '/_app/library/$id': typeof AppLibraryIdRoute
   '/_app/quiz/$topic': typeof AppQuizTopicRoute
@@ -101,7 +119,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/coach'
     | '/dashboard'
+    | '/learn'
     | '/tutor'
     | '/library/$id'
     | '/quiz/$topic'
@@ -111,7 +131,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/coach'
     | '/dashboard'
+    | '/learn'
     | '/tutor'
     | '/library/$id'
     | '/quiz/$topic'
@@ -122,7 +144,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/_app/coach'
     | '/_app/dashboard'
+    | '/_app/learn'
     | '/_app/tutor'
     | '/_app/library/$id'
     | '/_app/quiz/$topic'
@@ -166,11 +190,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTutorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/learn': {
+      id: '/_app/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof AppLearnRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/coach': {
+      id: '/_app/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof AppCoachRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/quiz/': {
@@ -205,7 +243,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppCoachRoute: typeof AppCoachRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppLearnRoute: typeof AppLearnRoute
   AppTutorRoute: typeof AppTutorRoute
   AppLibraryIdRoute: typeof AppLibraryIdRoute
   AppQuizTopicRoute: typeof AppQuizTopicRoute
@@ -214,7 +254,9 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCoachRoute: AppCoachRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppLearnRoute: AppLearnRoute,
   AppTutorRoute: AppTutorRoute,
   AppLibraryIdRoute: AppLibraryIdRoute,
   AppQuizTopicRoute: AppQuizTopicRoute,

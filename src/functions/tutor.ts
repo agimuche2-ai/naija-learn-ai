@@ -1,6 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+import { getLearningStylePromptHint, type LearningStyle } from "@/lib/adaptive-engine";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
+
+export type StudentContext = {
+  learningStyle: LearningStyle | null;
+  weakTopics: string[];
+  level: string;
+  xp: number;
+};
 type TutorRequest = { messages: Message[] };
 type StudyMaterial = {
   title: string;
@@ -19,7 +27,12 @@ type ChatProvider = {
 
 const TERM_CATEGORIES = ["First Term", "Second Term", "Third Term"];
 
-const CHEMISTRY_TUTOR_SYSTEM = `You are NaijaTutor, an expert Chemistry tutor for Nigerian senior secondary school students (SS1-SS3).
+function buildTutorSystemPrompt(ctx?: StudentContext): string {
+  const styleHint = ctx?.learningStyle ? getLearningStylePromptHint(ctx.learningStyle) : "";
+  const weakList = ctx?.weakTopics?.length ? `The student's weak topics are: ${ctx.weakTopics.join(", ")}. Prioritise clear explanations on these if asked.` : "";
+  const levelHint = ctx?.level ? `The student's current level is ${ctx.level} (${ctx.xp ?? 0} XP).` : "";
+
+  return `You are NaijaTutor, an expert Chemistry tutor for Nigerian senior secondary school students (SS1-SS3).
 
 CORE PRINCIPLES:
 - Explain concepts in simple, clear language accessible to SSS students
@@ -39,7 +52,13 @@ CHEMISTRY EXPERTISE:
 - Organic chemistry and hydrocarbons
 - Industrial processes such as Haber, Contact, and Solvay
 - Environmental chemistry
-- Practical lab techniques`;
+- Practical lab techniques
+
+STUDENT CONTEXT:
+${styleHint}
+${weakList}
+${levelHint}`.trim();
+}
 
 function isConfigured(apiKey?: string) {
   return Boolean(apiKey && apiKey !== "dummy-key" && !apiKey.includes("your-"));
@@ -83,7 +102,7 @@ async function callChatProvider(
       },
       body: JSON.stringify({
         model: provider.model,
-        messages: [{ role: "system", content: CHEMISTRY_TUTOR_SYSTEM }, ...messages],
+        messages,
         temperature: 0.7,
         max_tokens: 1500,
       }),
@@ -185,12 +204,17 @@ async function getLocalDatabaseFallback(userMessage: string): Promise<string | n
   }
 }
 
-export const askTutor = async ({ data }: { data: TutorRequest }) => {
+export const askTutor = async ({ data }: { data: TutorRequest & { studentContext?: StudentContext } }) => {
     try {
       const userMessage = data.messages[data.messages.length - 1]?.content || "";
+      const systemPrompt = buildTutorSystemPrompt(data.studentContext);
+      const messagesWithSystem: Message[] = [
+        { role: "system", content: systemPrompt },
+        ...data.messages,
+      ];
 
       for (const provider of getProviders()) {
-        const aiResponse = await callChatProvider(provider, data.messages);
+        const aiResponse = await callChatProvider(provider, messagesWithSystem);
         if (aiResponse) return aiResponse;
       }
 

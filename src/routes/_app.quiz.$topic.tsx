@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, Loader2, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { useLearningProfile, updateTopicMastery } from "@/hooks/use-learning-profile";
+import { getXPForAttempt } from "@/lib/adaptive-engine";
 
 export const Route = createFileRoute("/_app/quiz/$topic")({
   component: QuizRunner,
@@ -27,12 +29,13 @@ type Question = {
 function QuizRunner() {
   const { topic } = Route.useParams();
   const { user } = useAuth();
+  const { addXP } = useLearningProfile();
   const nav = useNavigate();
   const [pool, setPool] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Adaptive state
-  const [difficulty, setDifficulty] = useState(2); // start at medium
+  const [difficulty, setDifficulty] = useState(2);
   const [streak, setStreak] = useState(0);
   const [history, setHistory] = useState<
     { questionId: string; selected: number; correct: boolean; difficulty: number }[]
@@ -42,6 +45,7 @@ function QuizRunner() {
   const [revealed, setRevealed] = useState(false);
   const [done, setDone] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [xpEarned, setXpEarned] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -156,6 +160,10 @@ function QuizRunner() {
           })),
         );
       }
+      // Award XP + update mastery
+      const earned = await addXP(accuracy, avgDiff);
+      setXpEarned(earned);
+      await updateTopicMastery(user.id, topic, accuracy);
     }
     setSaving(false);
     setDone(true);
@@ -182,7 +190,7 @@ function QuizRunner() {
     );
   }
 
-  if (done) return <ResultScreen history={history} topic={topic} onRetry={() => nav({ to: "/quiz/$topic", params: { topic } })} />;
+  if (done) return <ResultScreen history={history} topic={topic} xpEarned={xpEarned} onRetry={() => nav({ to: "/quiz/$topic", params: { topic } })} />;
 
   if (!current) return null;
 
@@ -294,10 +302,12 @@ function QuizRunner() {
 function ResultScreen({
   history,
   topic,
+  xpEarned,
   onRetry,
 }: {
   history: { correct: boolean; difficulty: number }[];
   topic: string;
+  xpEarned: number;
   onRetry: () => void;
 }) {
   const score = history.filter((h) => h.correct).length;
@@ -328,6 +338,12 @@ function ResultScreen({
               value={(history.reduce((s, h) => s + h.difficulty, 0) / Math.max(1, total)).toFixed(1)}
             />
           </div>
+          {xpEarned > 0 && (
+            <div className="flex items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-4 py-3">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="font-display text-xl font-bold text-primary">+{xpEarned} XP earned!</span>
+            </div>
+          )}
           <p className="rounded-xl bg-secondary/60 p-4 text-sm">{recommend}</p>
           <div className="flex justify-center gap-2">
             <Button onClick={onRetry} variant="outline">

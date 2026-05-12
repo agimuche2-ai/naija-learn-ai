@@ -6,18 +6,13 @@ import { TOPICS } from "@/lib/topics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { ArrowRight, BookOpen, Brain, Flame, Sparkles, TrendingUp, MessageCircle } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ArrowRight, BookOpen, Brain, Flame, Sparkles, TrendingUp, MessageCircle, Target } from "lucide-react";
+import { MasteryHeatmap } from "@/components/MasteryHeatmap";
+import { XPProgressBar } from "@/components/XPProgressBar";
+import { CoachInsightCard } from "@/components/CoachInsightCard";
+import { useLearningProfile } from "@/hooks/use-learning-profile";
+import { useMastery } from "@/hooks/use-mastery";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: Dashboard,
@@ -35,6 +30,8 @@ type Attempt = {
 
 function Dashboard() {
   const { user } = useAuth();
+  const { profile } = useLearningProfile();
+  const { masteryByTopic, weakTopics: masteryWeakTopics } = useMastery();
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,17 +95,27 @@ function Dashboard() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" className="rounded-lg">
-            <Link to="/library">
-              <BookOpen className="mr-2 h-4 w-4" /> Library
-            </Link>
+            <Link to="/library"><BookOpen className="mr-2 h-4 w-4" /> Library</Link>
           </Button>
           <Button asChild className="bg-gradient-hero text-primary-foreground shadow-glow hover:opacity-95 rounded-lg">
-            <Link to="/quiz">
-              <Sparkles className="mr-2 h-4 w-4" /> Start Quiz
-            </Link>
+            <Link to="/quiz"><Sparkles className="mr-2 h-4 w-4" /> Start Quiz</Link>
           </Button>
         </div>
       </div>
+
+      {/* XP Card */}
+      {profile && <XPProgressBar profile={profile} />}
+
+      {/* Coach insight callout */}
+      {masteryWeakTopics.length > 0 && (
+        <CoachInsightCard
+          variant="warning"
+          title={`Focus area: ${masteryWeakTopics[0].topic}`}
+          body={`You scored ${masteryWeakTopics[0].mastery_score}% here. Chat with Coach Amaka for a personalised study plan.`}
+          cta="Open Coach"
+          ctaHref="/coach"
+        />
+      )}
 
       {/* Progress Overview */}
       {attempts.length > 0 && (
@@ -148,41 +155,51 @@ function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Link to="/library" className="group">
           <Card className="h-full border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 transition-all hover:shadow-md hover:border-primary/40">
             <CardContent className="flex items-center justify-between gap-4 py-8 px-6">
               <div className="flex items-center gap-4 flex-1">
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground flex-shrink-0">
-                  <BookOpen className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground">Study Library</h3>
-                  <p className="text-sm text-muted-foreground">Access SS1, SS2, SS3 notes</p>
-                </div>
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground flex-shrink-0"><BookOpen className="h-6 w-6" /></div>
+                <div><h3 className="font-bold text-foreground">Study Library</h3><p className="text-sm text-muted-foreground">SS1, SS2, SS3 notes</p></div>
               </div>
               <ArrowRight className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </CardContent>
           </Card>
         </Link>
-
         <Link to="/tutor" className="group">
           <Card className="h-full border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5 transition-all hover:shadow-md hover:border-accent/40">
             <CardContent className="flex items-center justify-between gap-4 py-8 px-6">
               <div className="flex items-center gap-4 flex-1">
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground flex-shrink-0">
-                  <MessageCircle className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground">Ask AI Tutor</h3>
-                  <p className="text-sm text-muted-foreground">Get instant help</p>
-                </div>
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground flex-shrink-0"><MessageCircle className="h-6 w-6" /></div>
+                <div><h3 className="font-bold text-foreground">Ask AI Tutor</h3><p className="text-sm text-muted-foreground">Get instant help</p></div>
               </div>
               <ArrowRight className="h-5 w-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </CardContent>
           </Card>
         </Link>
+        <Link to="/coach" className="group">
+          <Card className="h-full border-success/20 bg-gradient-to-br from-success/10 to-success/5 transition-all hover:shadow-md hover:border-success/40">
+            <CardContent className="flex items-center justify-between gap-4 py-8 px-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-success text-white flex-shrink-0"><Target className="h-6 w-6" /></div>
+                <div><h3 className="font-bold text-foreground">Coach Amaka</h3><p className="text-sm text-muted-foreground">Study plans & strategy</p></div>
+              </div>
+              <ArrowRight className="h-5 w-5 text-success opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
+
+      {/* Mastery Heatmap */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">🗺️ Topic Mastery Map</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MasteryHeatmap data={masteryByTopic} />
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-3">
